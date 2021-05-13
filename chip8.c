@@ -24,16 +24,11 @@ void loadRomInMemory(char *path) {
 		exit(EXIT_FAILURE);
 	}
 
-	byte *buf = (byte*) malloc(MEMORY_SIZE * sizeof(byte));
-	
 	//loading of the file content into memory starting from the 512 address location
-	while(fread(buf, sizeof(byte), 1, ptr) == 1) {
-		memory[address++] = *buf;
-		buf++;
-	}
-
-	//check if EOF is reached, otherwise throw error
-	if(!feof(ptr)) {
+	while(fread(&memory[address++], sizeof(byte), 1, ptr) == 1) ;
+	
+	//check if EOF is reached, or if ferror is set
+	if(!feof(ptr) || ferror(ptr)) {
 		printf("[Error] Read of the fail failed\n");
 		exit(EXIT_FAILURE);
 	}
