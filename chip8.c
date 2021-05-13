@@ -1,36 +1,57 @@
-/*
-Graphic
-
-La risoluzione di un display per il chip8 è di 64x32 pixel
-La grafica si serve di sprites, di 8 pixel wide e tra 1 e 16 pixel height
-
-I dati riguardanti le sprite dovrebbero essere salvate nell'area 0x000 - 0x1FF
-ossia l'area che avrebbe dovuto contenere l'interprete
-*/
-
 #include<stdio.h>
 #include<stdlib.h>
+
+#define MEMORY_SIZE 4096
+#define PROGRAM_START_ADDRESS 512
+
+typedef unsigned char byte;
+
+byte memory[MEMORY_SIZE];
 
 //reads a binary file from the 
 //path specified by the user
 //on the startup of the CHIP8 emulator
 void loadRomInMemory(char *path) {
-	//...
+	
+	FILE *ptr = NULL; 
+	int address = PROGRAM_START_ADDRESS;
+	
+	ptr = fopen(path, "rb");
+
+	//error opening the file
+	if(ptr == NULL) {
+		printf("[Error] Can't open '%s'\n", path);
+		exit(EXIT_FAILURE);
+	}
+
+	byte *buf = (byte*) malloc(MEMORY_SIZE * sizeof(byte));
+	
+	//loading of the file content into memory starting from the 512 address location
+	while(fread(buf, sizeof(byte), 1, ptr) == 1) {
+		memory[address++] = *buf;
+		buf++;
+	}
+
+	//check if EOF is reached, otherwise throw error
+	if(!feof(ptr)) {
+		printf("[Error] Read of the fail failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	fclose(ptr);
 }
 
 int main(int argc, char **argv) {
 
 	//we expect the user to specify the path of the rom to run 
-	//when lauches the emulator, like "./chip8 path/to/rom"
-	//so argc should contain the value 2, and argv[2]
+	//when launches the emulator, like "./chip8 path/to/rom"
+	//so argc should contain the value 2, and argv[1]
 	//should contain the path to the rom 
 	if(argc<2) {
 		printf("[Error] You have to specify the path to you're ROM, like './chip8 paht/to/ROM'\n");
 		exit(EXIT_FAILURE);
 	}
 
-	loadRomInMemory(argv[2]);
+	loadRomInMemory(argv[1]); //loads the ROM in memory
 
-	
-	
 }

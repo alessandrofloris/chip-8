@@ -3,3 +3,9 @@
 
 #ignore txt files
 *txt
+
+#ignore test files
+test.*
+
+#ignore rom directory for now
+rom
