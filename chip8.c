@@ -273,6 +273,7 @@ void startEmulation() {
 int main(int argc, char **argv) {
 	
 	srand(time(NULL));
+	
 	//we expect the user to specify the path of the rom to run 
 	//when launches the emulator, like "./chip8 path/to/rom"
 	//so argc should contain the value 2, and argv[1]
