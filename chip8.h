@@ -1,6 +1,8 @@
 #define N_REGISTERS 16 //chip 8 has 16 general purpose registers
 
-#define MEMORY_SIZE 4096 //chip 8 have 4096 memory locations
+#define MEMORY_SIZE 4096 //chip 8 has 4096 memory locations
+
+#define STACK_SIZE 16 //chip 8 has 16 levels of stack
 
 #define PROGRAM_START_ADDRESS 512 //in the first 512 byte was usually used to store the 
 								  //chip-8 interpreter, so the progma will start from the address 512
@@ -19,5 +21,8 @@ typedef struct {
 
 	//the 16bit address register
 	word I;
+
+	//8bit stack pointer, points to the top of the stack
+	byte sp;
 
 }CPU;

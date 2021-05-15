@@ -6,6 +6,8 @@
 
 byte memory[MEMORY_SIZE]; //our memory
 
+byte stack[STACK_SIZE];
+
 CPU cpu; //our cpu
 
 //reads a binary file from the 
@@ -48,6 +50,9 @@ void initEmulator(char *path) {
 	//we know that the first instruction is stored 
 	//in memory at the address 512
 	cpu.pc = (word)PROGRAM_START_ADDRESS;
+
+	//setting the stack pointer
+	cpu.sp = -1;
 
 	//initialization of the general purpose registers
 	for(int i=0;i<N_REGISTERS;i++) {
@@ -99,8 +104,9 @@ void decodeAndExecute(word opcode) {
 				case 0x00E0: //clears the screen
 					//...
 					break;
-				case 0x00EE: //returns from a subroutine
-					//...
+				case 0x00EE: //returns from a subroutine. The interpreter sets the program counter to the address at the top of the stack,
+						     //then subtracts 1 from the stack pointer.
+					cpu.pc = stack[cpu.sp--];
 					break;
 				default: //0NNN, calls machine code routine at address NNN. Not necessary for most ROMs
 					//...
@@ -110,22 +116,25 @@ void decodeAndExecute(word opcode) {
 		case 0x1: //1NNN, jumps to address NNN
 			cpu.pc = (opcode&0x0FFF);
 			break;
-		case 0x2: //2NNN, Calls subroutine at NNN
-			//...
+		case 0x2: //2NNN, Calls subroutine at NNN. The interpreter increments the stack pointer, then puts the current PC on the top
+				  //of the stack. The PC is then set to nnn
+			cpu.sp++;
+			stack[cpu.sp] = cpu.pc;
+			cpu.pc = (opcode&0x0FFF);
 			break;	
 		case 0x3: //3XNN, Skips the next instruction if VX equals NN. (Usually the next instruction is a jump to skip a code block)
 			if(cpu.v[getXFromOpcode(opcode)] == (opcode&0x00FF)) {
-				(cpu.pc)++;
+				cpu.pc = cpu.pc + 2; //we increment the pc by 2 cause each instruction is 16 byte longs 
 			}
 			break;
 		case 0x4: //4XNN, Skips the next instruction if VX does not equal NN. (Usually the next instruction is a jump to skip a code block)
 			if(cpu.v[getXFromOpcode(opcode)] != (opcode&0x00FF)) {
-				(cpu.pc)++;	
+				cpu.pc = cpu.pc + 2;
 			}
 			break;
 		case 0x5: //5XY0, Skips the next instruction if VX equals VY. (Usually the next instruction is a jump to skip a code block)
 			if(cpu.v[getXFromOpcode(opcode)] == cpu.v[getYFromOpcode(opcode)]) {
-				(cpu.pc)++;	
+				cpu.pc = cpu.pc + 2;	
 			}
 			break;
 		case 0x6: //6XNN, Sets VX to NN 
@@ -190,7 +199,7 @@ void decodeAndExecute(word opcode) {
 			break;	
 		case 0x9: //9XY0, Skips the next instruction if VX does not equal VY. (Usually the next instruction is a jump to skip a code block)
 			if(cpu.v[getXFromOpcode(opcode)] != cpu.v[getYFromOpcode(opcode)]) {
-				(cpu.pc)++;
+				cpu.pc = cpu.pc + 2;
 			}
 			break;
 		case 0xA: //ANNN, Sets I to the address NNN
