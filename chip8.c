@@ -5,9 +5,11 @@
 #include "chip8.h"
 #include "graphic.h"
 
+byte keyboard[N_KEYBOARD_INPUTS]; //keyboard map
+
 byte memory[MEMORY_SIZE]; //our memory
 
-byte stack[STACK_SIZE];
+byte stack[STACK_SIZE]; //stack
 
 CPU cpu; //our cpu
 
@@ -58,6 +60,10 @@ void initEmulator(char *path) {
 	//initialization of the general purpose registers
 	for(int i=0;i<N_REGISTERS;i++) {
 		cpu.v[i] = 0;
+	}
+
+	for(int i=0;i<N_KEYBOARD_INPUTS;i++) {
+		keyboard[i] = 0;
 	}
 
 	//...
