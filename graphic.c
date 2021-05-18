@@ -26,6 +26,9 @@ void initGraphic() {
     exit(EXIT_FAILURE);
   }
 
+  //monochrome display
+  //Chip-8 draws graphics on screen through the use of sprites
+
   SDL_Delay(5000); //pause execution for 5 seconds
 
   SDL_DestroyWindow(window); //clears and destroy the window

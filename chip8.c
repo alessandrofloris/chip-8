@@ -273,6 +273,8 @@ void decodeAndExecute(word opcode) {
 					break;
 			}
 			break;
+		default:
+				printf("[Warning] Unknown opcode: %x\n", opcode);
 		}
 }
 
@@ -286,6 +288,8 @@ void startEmulation() {
 		opcode = fetch(); //fetches the opcode from memory
 
 		decodeAndExecute(opcode); //decodes and executes the opcode
+
+		//handleInput();
 	}
 
 }
