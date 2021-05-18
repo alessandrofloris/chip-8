@@ -213,7 +213,7 @@ void decodeAndExecute(word opcode) {
 			cpu.I = (opcode&0x0FFF);
 			break;
 		case 0xB: //BNNN, Jumps to the address NNN plus V0
-			cpu.pc = cpu.v[0x0]+(opcode&0x0FFF);
+			cpu.pc = cpu.v[0]+(opcode&0x0FFF);
 			break;
 		case 0xC: //CXNN, Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
 			cpu.v[getXFromOpcode(opcode)] = (rand()%(255+1))&(opcode&0x00FF);
@@ -226,10 +226,14 @@ void decodeAndExecute(word opcode) {
 		case 0xE:
 				switch(opcode&0x000F) {
 					case 0xE: //EX9E ,Skips the next instruction if the key stored in VX is pressed. (Usually the next instruction is a jump to skip a code block)
-						//...
+						if(keyboard[cpu.v[getXFromOpcode(opcode)]]) { //if the key is pressed
+							cpu.pc = cpu.pc + 2;
+						}
 						break;
 					case 0x1: //EXA1, Skips the next instruction if the key stored in VX is not pressed. (Usually the next instruction is a jump to skip a code block)
-						//...
+					if(!keyboard[cpu.v[getXFromOpcode(opcode)]]) { //if the key is not pressed
+						cpu.pc = cpu.pc + 2;
+					}
 						break;
 				}
 			break;
@@ -248,7 +252,7 @@ void decodeAndExecute(word opcode) {
 					//...
 					break;
 				case 0x1E: //FX1E, Adds VX to I. VF is not affected
-					//...
+					cpu.I = cpu.I + cpu.v[getXFromOpcode(opcode)];
 					break;
 				case 0x29: //FX29, Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 					//...
