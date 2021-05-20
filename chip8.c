@@ -2,6 +2,9 @@
 #include<stdlib.h>
 #include <time.h>
 
+#include <SDL2/SDL.h>
+
+
 #include "chip8.h"
 #include "graphic.h"
 
@@ -12,6 +15,18 @@ byte memory[MEMORY_SIZE]; //our memory
 byte stack[STACK_SIZE]; //stack
 
 CPU cpu; //our cpu
+
+/**************/
+//Graphic
+/**************/
+
+SDL_Window* window;
+SDL_Renderer* renderer;
+SDL_Texture* texture;
+
+/**************/
+//Functions
+/**************/
 
 //reads a binary file from the
 //path specified by the user
@@ -309,7 +324,9 @@ int main(int argc, char **argv) {
 
 	initEmulator(argv[1]); //initialize our emulator
 
-	initGraphic(); //initialize emulator graphic
+	initGraphic(window, renderer, texture); //initialize emulator graphic
 
 	startEmulation(); //starts the execution of the program in memory
+
+	freeGraphic(window, renderer, texture); //close emulator window
 }

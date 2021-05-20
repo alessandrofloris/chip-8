@@ -5,3 +5,6 @@
 #define SCREEN_HEIGHT 32
 
 void initGraphic();
+void freeGraphic();
+
+void drawGraphic();

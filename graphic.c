@@ -3,7 +3,7 @@
 #include "graphic.h"
 
 
-void initGraphic() {
+void initGraphic(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture) {
 
   //init sdl
   if( SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -12,7 +12,7 @@ void initGraphic() {
   }
 
   //create window
-  SDL_Window* window = SDL_CreateWindow("Chip 8",
+  window = SDL_CreateWindow("Chip 8",
   SDL_WINDOWPOS_CENTERED,
   SDL_WINDOWPOS_CENTERED,
   WINDOW_WIDTH,
@@ -27,7 +27,7 @@ void initGraphic() {
   }
 
   //create renderer
-  SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
+  renderer = SDL_CreateRenderer(window, -1, 0);
 
   //if renderer creation fails
   if(renderer == NULL) {
@@ -38,7 +38,7 @@ void initGraphic() {
   }
 
   //create texture
-  SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   //if texture creation fails
   if(texture == NULL) {
@@ -49,19 +49,20 @@ void initGraphic() {
     exit(EXIT_FAILURE);
   }
 
-  // Set the screen to black 
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
-  SDL_RenderPresent(renderer);
+  // Set the screen to black
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); //Set the color used for drawing operations (Rect, Line and Clear).
+  SDL_RenderClear(renderer); //Clear the current rendering target with the drawing color.
+  SDL_RenderPresent(renderer); //Update the screen with any rendering performed since the previous call.
 
-  //monochrome display
-  //Chip-8 draws graphics on screen through the use of sprites
 
-  SDL_Delay(5000); //pause execution for 5 seconds
+}
 
-  SDL_DestroyTexture(texture);
+//close window
+void freeGraphic(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture) {
 
-  SDL_DestroyRenderer(renderer);
+  SDL_DestroyTexture(texture); //clears and destroy the texture
+
+  SDL_DestroyRenderer(renderer); //clears and destroy the renderer
 
   SDL_DestroyWindow(window); //clears and destroy the window
 
