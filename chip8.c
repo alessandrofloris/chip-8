@@ -22,7 +22,8 @@ CPU cpu; //our cpu
 
 SDL_Window* window;
 SDL_Renderer* renderer;
-SDL_Texture* texture;
+SDL_Texture* texture; //A texture is an image already converted and stored in the graphic card.
+ 											//Its display is way faster, and also relieves the processor of the machine.
 
 /**************/
 //Functions
