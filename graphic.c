@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 
 #include "graphic.h"
-
+#include "chip8.h"
 
 void initGraphic(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture) {
 
@@ -53,8 +53,24 @@ void initGraphic(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textur
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); //Set the color used for drawing operations (Rect, Line and Clear).
   SDL_RenderClear(renderer); //Clear the current rendering target with the drawing color.
   SDL_RenderPresent(renderer); //Update the screen with any rendering performed since the previous call.
+}
 
+// Update the graphic buffer
+void bufferGraphics(byte screen[64][32], uint32_t *buffer, SDL_Renderer *renderer) {
+    for (int y = 0; y < SCREEN_HEIGHT; y++) {
+        for (int x = 0; x < SCREEN_WIDTH; x++) {
+            byte pixel = screen[y][x];
+            buffer[(y * SCREEN_WIDTH) + x] = (0xFFFFFF00 * pixel) | 0x000000FF;
+        }
+    }
+}
 
+// Draw graphic to the screen
+void drawGraphics(uint32_t *buffer, SDL_Renderer *renderer, SDL_Texture *texture) {
+    SDL_UpdateTexture(texture, NULL, buffer, SCREEN_WIDTH * sizeof(uint32_t));
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
 }
 
 //close window

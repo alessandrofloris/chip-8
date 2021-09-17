@@ -8,6 +8,8 @@
 #include "chip8.h"
 #include "graphic.h"
 
+byte log_ = 1;
+
 byte keyboard[N_KEYBOARD_INPUTS]; //keyboard map
 
 byte memory[MEMORY_SIZE]; //our memory
@@ -19,6 +21,11 @@ CPU cpu; //our cpu
 /**************/
 //Graphic
 /**************/
+
+byte screen[64][32]; //represent our screen
+uint32_t *pixel_buffer;
+
+byte draw_screen_flag = 0;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -65,6 +72,8 @@ void initEmulator(char *path) {
 
 	loadRomInMemory(path); //loads the ROM in memory
 
+	pixel_buffer = malloc((SCREEN_HEIGHT * SCREEN_WIDTH) * sizeof(uint32_t));
+
 	//sets program counter
 	//we know that the first instruction is stored
 	//in memory at the address 512
@@ -78,11 +87,18 @@ void initEmulator(char *path) {
 		cpu.v[i] = 0;
 	}
 
+	//...
 	for(int i=0;i<N_KEYBOARD_INPUTS;i++) {
 		keyboard[i] = 0;
 	}
 
 	//...
+}
+
+//prints in the console the opcode
+void stringifyOpcode(word opcode) {
+
+	printf("%x| ", opcode);
 }
 
 //fetch the next instruction in memory pointed by the pc
@@ -91,15 +107,23 @@ word fetch() {
 	//since each opcode is 2byte long, and in memory we store
 	//1byte per time, we need to use some logic operators to
 	//store the full opcode in one variable
-	word opcode = memory[(cpu.pc)++]; //fetch the first byte of the opcode
-	opcode = opcode<<8; //left shift of 8 bit
-	opcode = opcode | memory[(cpu.pc)++]; //fetch the second byte of the opcode
+
+	word opcode; //will contain the full opcode
+	byte msb = memory[(cpu.pc)++]; //fetch the most significant byte of the opcode
+	byte lsb = memory[(cpu.pc)++]; //fetch the least significant byte of the opcode
+
+	opcode = msb<<8 | lsb;
+
+	//I want to print what opcode is read from memory in the console
+	if(log_) {
+		stringifyOpcode(opcode);
+	}
 
 	return opcode;
 }
 
-//knowing that in each opcode the is is the secondo
-//most significant nibble, like NXNN, we can optain it
+//knowing that in each opcode the "X" is the second
+//most significant nibble, like NXNN, we can obtain it
 byte getXFromOpcode(word opcode) {
 	byte x = (byte)opcode>>8;
 	x = (x&0x0F);
@@ -119,7 +143,7 @@ byte getYFromOpcode(word opcode) {
 //decodes the opcode and execute it
 void decodeAndExecute(word opcode) {
 
-	word x, y; //support variables
+	word x, y, i; //support variables
 
 	switch(opcode>>12) {
 		case 0x0:
@@ -237,7 +261,29 @@ void decodeAndExecute(word opcode) {
 		case 0xD: //DXYN, Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N+1 pixels.
 				  //Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction.
 				  //As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen
-			//...
+
+		    byte sprite_height = (opcode&0x000F)+1;; //sprite height
+		    byte x_location = cpu.v[getXFromOpcode(opcode)]; //X coordinate
+		    byte y_location = cpu.v[getYFromOpcode(opcode)]; //Y coordinate
+		    byte pixel;
+
+		    cpu.v[0xF] = 0; //reset collision register to false (zero)
+
+		    for (int y_coordinate = 0; y_coordinate < sprite_height; y_coordinate++) {
+		        pixel = memory[cpu.I + y_coordinate];
+		        for (int x_coordinate = 0; x_coordinate < 8; x_coordinate++) {
+		            if ((pixel & (0x80 >> x_coordinate)) != 0) {
+		                if (screen[y_location + y_coordinate][x_location + x_coordinate] == 1) {
+		                    cpu.v[0xF] = 1;
+		                }
+		                screen[y_location + y_coordinate][x_location + x_coordinate] ^= 1;
+		            }
+		        }
+		    }
+
+		    draw_screen_flag = 1;
+		    cpu.pc += 2;
+
 			break;
 		case 0xE:
 				switch(opcode&0x000F) {
@@ -300,12 +346,20 @@ void startEmulation() {
 
 	word opcode;
 
-	for(int i=0;i<100;i++) {
+	for(int i=0;i<120;i++) {
 		opcode = fetch(); //fetches the opcode from memory
 
 		decodeAndExecute(opcode); //decodes and executes the opcode
 
 		//handleInput();
+
+		//if the drawScreen flag has been set to 1 then update the screen (and clear the flag)
+		if(draw_screen_flag) {
+				bufferGraphics(screen, pixel_buffer, renderer);
+				drawGraphics(pixel_buffer, renderer, texture);
+				draw_screen_flag = 0;
+		}
+
 	}
 
 }

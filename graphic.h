@@ -7,6 +7,5 @@
 void initGraphic(SDL_Window*, SDL_Renderer*, SDL_Texture*);
 void freeGraphic(SDL_Window*, SDL_Renderer*, SDL_Texture*);
 
-void testGraphic();
-
-void drawGraphic();
+void bufferGraphics(uint8_t screen[64][32], uint32_t*, SDL_Renderer*);
+void drawGraphics(uint32_t*, SDL_Renderer*, SDL_Texture*);
