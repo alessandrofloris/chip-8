@@ -16,7 +16,7 @@ byte keyboard[N_KEYBOARD_INPUTS]; //keyboard map
 
 byte memory[MEMORY_SIZE]; //our memory
 
-byte stack[STACK_SIZE]; //stack
+word stack[STACK_SIZE]; //stack
 
 CPU cpu; //our cpu
 
@@ -25,7 +25,7 @@ CPU cpu; //our cpu
 /**************/
 
 byte screen[64][32]; //represent our screen
-uint32_t *pixel_buffer;
+uint32_t *pixel_buffer; //store the pixel status of the screen
 
 byte draw_screen_flag = 0;
 
@@ -82,7 +82,7 @@ void initEmulator(char *path) {
 	cpu.pc = (word)PROGRAM_START_ADDRESS;
 
 	//setting the stack pointer
-	cpu.sp = -1;
+	cpu.sp = 0;
 
 	//initialization of the general purpose registers
 	for(int i=0;i<N_REGISTERS;i++) {
@@ -104,12 +104,6 @@ void initEmulator(char *path) {
 	//...
 }
 
-//prints in the console the opcode
-void stringifyOpcode(word opcode) {
-
-	printf("%x| ", opcode);
-}
-
 //fetch the next instruction in memory pointed by the pc
 word fetch() {
 
@@ -121,12 +115,7 @@ word fetch() {
 	byte msb = memory[(cpu.pc)++]; //fetch the most significant byte of the opcode
 	byte lsb = memory[(cpu.pc)++]; //fetch the least significant byte of the opcode
 
-	opcode = msb<<8 | lsb;
-
-	//I want to print what opcode is read from memory in the console
-	if(log_) {
-		stringifyOpcode(opcode);
-	}
+	opcode = lsb<<8 | msb;
 
 	return opcode;
 }
@@ -149,10 +138,37 @@ byte getYFromOpcode(word opcode) {
 	return y;
 }
 
+void printMemory() {
+
+	for(int i=PROGRAM_START_ADDRESS;i<PROGRAM_START_ADDRESS+100; i++) {
+		printf("[%x] %x\n", i, memory[i]);
+	}
+}
+
+//shows in the console 
+//what opcode is being executed and the status of the registers
+void debug_(word opcode) {
+
+	printf("Opcode: 0x%x\n", opcode);
+	printf("Registers: \n");
+	for(int i=0; i<16; i++) {
+		printf("\tV[%d] = %x\n", i, cpu.v[i]);
+	}
+	printf("PC = %x\n", cpu.pc);
+	printf("SP = %d\n", cpu.sp);
+	printf("I = %d\n", cpu.I);
+	printMemory();
+	printf("press a key to continue...\n\n");
+	getchar();
+}
+
 //decodes the opcode and execute it
 void decodeAndExecute(word opcode) {
 
 	word x, y, i; //support variables
+
+	if(log_)
+		debug_(opcode);
 
 	switch(opcode>>12) {
 		case 0x0:
@@ -174,8 +190,8 @@ void decodeAndExecute(word opcode) {
 			break;
 		case 0x2: //2NNN, Calls subroutine at NNN. The interpreter increments the stack pointer, then puts the current PC on the top
 				  //of the stack. The PC is then set to nnn
-			cpu.sp++;
 			stack[cpu.sp] = cpu.pc;
+			cpu.sp++;
 			cpu.pc = (opcode&0x0FFF);
 			break;
 		case 0x3: //3XNN, Skips the next instruction if VX equals NN. (Usually the next instruction is a jump to skip a code block)
@@ -347,6 +363,10 @@ void decodeAndExecute(word opcode) {
 		default:
 				printf("[Warning] Unknown opcode: %x\n", opcode);
 		}
+
+		if(log_)
+		debug_(opcode);
+
 }
 
 //checks for user inputs
