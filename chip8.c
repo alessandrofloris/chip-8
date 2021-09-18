@@ -10,6 +10,8 @@
 
 byte log_ = 1;
 
+byte isRunning = 1;
+
 byte keyboard[N_KEYBOARD_INPUTS]; //keyboard map
 
 byte memory[MEMORY_SIZE]; //our memory
@@ -90,6 +92,11 @@ void initEmulator(char *path) {
 	//...
 	for(int i=0;i<N_KEYBOARD_INPUTS;i++) {
 		keyboard[i] = 0;
+	}
+
+	//load fontset into memory
+	for(int i = 0; i < FONTSET_SIZE; i++) {
+		memory[i] = FONTSET[i];
 	}
 
 	//...
@@ -340,20 +347,33 @@ void decodeAndExecute(word opcode) {
 		}
 }
 
+//checks for user inputs
+void handleUserInput() {
+	SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+
+         //checks if the "x" button on the screen window has been clicked
+         if (e.type == SDL_QUIT) {
+            isRunning = 0;
+         }
+    }
+}
+
 //manage the execution of the program in memory
 //fetch-decode-execute cycle
 void startEmulation() {
 
 	word opcode;
 
-	for(int i=0;i<120;i++) {
+	//stops when the user click the "x" on the screen window
+	while(isRunning){
 		opcode = fetch(); //fetches the opcode from memory
 
 		decodeAndExecute(opcode); //decodes and executes the opcode
 
-		//handleInput();
+		handleUserInput(); //handles the user inputs, like key or mouse clicks
 
-		//if the drawScreen flag has been set to 1 then update the screen (and clear the flag)
+		//if the drawScreen flag has been set then updates the screen (and clear the flag)
 		if(draw_screen_flag) {
 				bufferGraphics(screen, pixel_buffer, renderer);
 				drawGraphics(pixel_buffer, renderer, texture);
