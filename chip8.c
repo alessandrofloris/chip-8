@@ -89,10 +89,12 @@ void initEmulator(char *path) {
 		cpu.v[i] = 0;
 	}
 
-	//...
-	for(int i=0;i<N_KEYBOARD_INPUTS;i++) {
-		keyboard[i] = 0;
-	}
+	//clear display
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < SCREEN_WIDTH; j++) {
+            screen[i][j] = 0;
+        }
+    }
 
 	//load fontset into memory
 	for(int i = 0; i < FONTSET_SIZE; i++) {

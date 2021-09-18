@@ -13,11 +13,11 @@ void initGraphic(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textur
 
   //create window
   window = SDL_CreateWindow("Chip 8",
-  SDL_WINDOWPOS_CENTERED,
-  SDL_WINDOWPOS_CENTERED,
-  WINDOW_WIDTH,
-  WINDOW_HEIGH,
-  0);
+    SDL_WINDOWPOS_CENTERED,
+    SDL_WINDOWPOS_CENTERED,
+    WINDOW_WIDTH,
+    WINDOW_HEIGH,
+    0);
 
   //if window creation failed
   if(window == NULL) {
@@ -38,7 +38,11 @@ void initGraphic(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textur
   }
 
   //create texture
-  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+  texture = SDL_CreateTexture(renderer,
+      SDL_PIXELFORMAT_RGBA8888,
+      SDL_TEXTUREACCESS_TARGET,
+      SCREEN_WIDTH,
+      SCREEN_HEIGHT);
 
   //if texture creation fails
   if(texture == NULL) {
