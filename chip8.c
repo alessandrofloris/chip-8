@@ -13,7 +13,7 @@
 #include "chip8.h"
 #include "graphic.h"
 
-byte log_ = 0;
+byte log_ = 1;
 
 byte isRunning = 1;
 
@@ -170,9 +170,6 @@ void decodeAndExecute(word opcode) {
 
 	word x, y, i; //support variables
 
-	if(log_)
-		debug_(opcode);
-
 	switch(opcode>>12) {
 		case 0x0:
 			switch(opcode) {
@@ -181,7 +178,8 @@ void decodeAndExecute(word opcode) {
 					break;
 				case 0x00EE: //returns from a subroutine. The interpreter sets the program counter to the address at the top of the stack,
 						     //then subtracts 1 from the stack pointer.
-					cpu.pc = stack[cpu.sp--];
+					cpu.sp--;
+					cpu.pc = stack[cpu.sp];
 					break;
 				default: //0NNN, calls machine code routine at address NNN. Not necessary for most ROMs
 					//...
