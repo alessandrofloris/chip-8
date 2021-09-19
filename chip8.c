@@ -8,7 +8,7 @@
 #include "chip8.h"
 #include "graphic.h"
 
-byte log_ = 1;
+byte log_ = 0;
 
 byte isRunning = 1;
 
@@ -24,8 +24,8 @@ CPU cpu; //our cpu
 //Graphic
 /**************/
 
-byte screen[64][32]; //represent our screen
-uint32_t *pixel_buffer; //store the pixel status of the screen
+byte screen[SCREEN_HEIGHT][SCREEN_WIDTH]; //represent our screen
+uint32_t *pixel_buffer; //store the pixel status of the screen 
 
 byte draw_screen_flag = 0;
 
@@ -66,6 +66,16 @@ void loadRomInMemory(char *path) {
 	fclose(ptr);
 }
 
+void clearDisplay() {
+	
+	for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < SCREEN_WIDTH; j++) {
+            screen[i][j] = 0;
+        }
+    }
+	draw_screen_flag = 1;
+}
+
 //initialize our emulator
 //loads proram in memory
 //set registers
@@ -89,12 +99,7 @@ void initEmulator(char *path) {
 		cpu.v[i] = 0;
 	}
 
-	//clear display
-    for (int i = 0; i < SCREEN_HEIGHT; i++) {
-        for (int j = 0; j < SCREEN_WIDTH; j++) {
-            screen[i][j] = 0;
-        }
-    }
+    clearDisplay();
 
 	//load fontset into memory
 	for(int i = 0; i < FONTSET_SIZE; i++) {
@@ -115,7 +120,9 @@ word fetch() {
 	byte msb = memory[(cpu.pc)++]; //fetch the most significant byte of the opcode
 	byte lsb = memory[(cpu.pc)++]; //fetch the least significant byte of the opcode
 
-	opcode = lsb<<8 | msb;
+	opcode = msb;
+	opcode = opcode<<8;
+	opcode = opcode|lsb;
 
 	return opcode;
 }
@@ -123,7 +130,7 @@ word fetch() {
 //knowing that in each opcode the "X" is the second
 //most significant nibble, like NXNN, we can obtain it
 byte getXFromOpcode(word opcode) {
-	byte x = (byte)opcode>>8;
+	byte x = (byte)(opcode>>8);
 	x = (x&0x0F);
 
 	return x;
@@ -132,17 +139,10 @@ byte getXFromOpcode(word opcode) {
 //knowing that in each opcode the is is the third
 //most significant nibble, like NNYN, we can optain it
 byte getYFromOpcode(word opcode) {
-	byte y = (byte)opcode>>4;
+	byte y = (byte)(opcode>>4);
 	y = (y&0x0F);
 
 	return y;
-}
-
-void printMemory() {
-
-	for(int i=PROGRAM_START_ADDRESS;i<PROGRAM_START_ADDRESS+100; i++) {
-		printf("[%x] %x\n", i, memory[i]);
-	}
 }
 
 //shows in the console 
@@ -157,8 +157,20 @@ void debug_(word opcode) {
 	printf("PC = %x\n", cpu.pc);
 	printf("SP = %d\n", cpu.sp);
 	printf("I = %d\n", cpu.I);
-	printMemory();
 	printf("press a key to continue...\n\n");
+	getchar();
+}
+
+void printScreen() {
+
+    for(int i=0; i<SCREEN_HEIGHT; i++) {
+        for(int j=0; i<SCREEN_WIDTH; j++) {
+            printf("%d|", screen[i][j]);
+        }
+        printf("\n");
+    }
+
+	printf("\n\nClick a key to continue...\n");
 	getchar();
 }
 
@@ -167,14 +179,16 @@ void decodeAndExecute(word opcode) {
 
 	word x, y, i; //support variables
 
-	if(log_)
-		debug_(opcode);
+	//if(log_)
+	//	debug_(opcode);
 
 	switch(opcode>>12) {
 		case 0x0:
 			switch(opcode) {
 				case 0x00E0: //clears the screen
-					//...
+				
+					clearDisplay();
+					//printScreen();
 					break;
 				case 0x00EE: //returns from a subroutine. The interpreter sets the program counter to the address at the top of the stack,
 						     //then subtracts 1 from the stack pointer.
@@ -287,7 +301,7 @@ void decodeAndExecute(word opcode) {
 				  //Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change after the execution of this instruction.
 				  //As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen
 
-		    byte sprite_height = (opcode&0x000F)+1;; //sprite height
+		    byte sprite_height = (opcode&0x000F); //sprite height
 		    byte x_location = cpu.v[getXFromOpcode(opcode)]; //X coordinate
 		    byte y_location = cpu.v[getYFromOpcode(opcode)]; //Y coordinate
 		    byte pixel;
@@ -306,8 +320,9 @@ void decodeAndExecute(word opcode) {
 		        }
 		    }
 
+			//printScreen();
+
 		    draw_screen_flag = 1;
-		    cpu.pc += 2;
 
 			break;
 		case 0xE:
@@ -365,8 +380,7 @@ void decodeAndExecute(word opcode) {
 		}
 
 		if(log_)
-		debug_(opcode);
-
+			debug_(opcode);
 }
 
 //checks for user inputs
@@ -421,9 +435,10 @@ int main(int argc, char **argv) {
 
 	initEmulator(argv[1]); //initialize our emulator
 
-	initGraphic(window, renderer, texture); //initialize emulator graphic
+	initGraphic(&window, &renderer, &texture); //initialize emulator graphic
 
 	startEmulation(); //starts the execution of the program in memory
 
 	freeGraphic(window, renderer, texture); //close emulator window
+	free(pixel_buffer);
 }
