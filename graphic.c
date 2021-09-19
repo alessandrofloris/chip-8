@@ -69,13 +69,12 @@ void bufferGraphics(byte screen[SCREEN_HEIGHT][SCREEN_WIDTH], uint32_t *buffer, 
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             byte pixel = screen[y][x];
-            //printf("[y=%d][x=%d] pixel = %d\n", y, x, pixel);
             buffer[(y * SCREEN_WIDTH) + x] = (0xFFFFFF00 * pixel) | 0x000000FF;
         }
     }
 }
 
-// Draw graphic to the screen
+// Draw graphic to the emulator screen
 void drawGraphics(uint32_t *buffer, SDL_Renderer *renderer, SDL_Texture *texture) {
     SDL_UpdateTexture(texture, NULL, buffer, SCREEN_WIDTH * sizeof(uint32_t));
     SDL_RenderClear(renderer);

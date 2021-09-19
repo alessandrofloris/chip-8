@@ -1,9 +1,14 @@
+/**
+*	TODO
+*	Implementeare sistema di debugging
+* 	Implementare un handler per gli input
+**/
+
 #include<stdio.h>
 #include<stdlib.h>
 #include <time.h>
 
 #include <SDL2/SDL.h>
-
 
 #include "chip8.h"
 #include "graphic.h"
@@ -32,7 +37,7 @@ byte draw_screen_flag = 0;
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* texture; //A texture is an image already converted and stored in the graphic card.
- 											//Its display is way faster, and also relieves the processor of the machine.
+ 					  //Its display is way faster, and also relieves the processor of the machine.
 
 /**************/
 //Functions
@@ -66,6 +71,7 @@ void loadRomInMemory(char *path) {
 	fclose(ptr);
 }
 
+//set all the pixels of the screen to zero
 void clearDisplay() {
 	
 	for (int i = 0; i < SCREEN_HEIGHT; i++) {
@@ -120,9 +126,7 @@ word fetch() {
 	byte msb = memory[(cpu.pc)++]; //fetch the most significant byte of the opcode
 	byte lsb = memory[(cpu.pc)++]; //fetch the least significant byte of the opcode
 
-	opcode = msb;
-	opcode = opcode<<8;
-	opcode = opcode|lsb;
+	opcode = msb<<8 | lsb;
 
 	return opcode;
 }
@@ -161,34 +165,19 @@ void debug_(word opcode) {
 	getchar();
 }
 
-void printScreen() {
-
-    for(int i=0; i<SCREEN_HEIGHT; i++) {
-        for(int j=0; i<SCREEN_WIDTH; j++) {
-            printf("%d|", screen[i][j]);
-        }
-        printf("\n");
-    }
-
-	printf("\n\nClick a key to continue...\n");
-	getchar();
-}
-
 //decodes the opcode and execute it
 void decodeAndExecute(word opcode) {
 
 	word x, y, i; //support variables
 
-	//if(log_)
-	//	debug_(opcode);
+	if(log_)
+		debug_(opcode);
 
 	switch(opcode>>12) {
 		case 0x0:
 			switch(opcode) {
-				case 0x00E0: //clears the screen
-				
+				case 0x00E0: //clears the screen				
 					clearDisplay();
-					//printScreen();
 					break;
 				case 0x00EE: //returns from a subroutine. The interpreter sets the program counter to the address at the top of the stack,
 						     //then subtracts 1 from the stack pointer.
@@ -320,10 +309,7 @@ void decodeAndExecute(word opcode) {
 		        }
 		    }
 
-			//printScreen();
-
 		    draw_screen_flag = 1;
-
 			break;
 		case 0xE:
 				switch(opcode&0x000F) {
@@ -383,7 +369,7 @@ void decodeAndExecute(word opcode) {
 			debug_(opcode);
 }
 
-//checks for user inputs
+//handle user inputs
 void handleUserInput() {
 	SDL_Event e;
     while (SDL_PollEvent(&e)) {
@@ -409,15 +395,13 @@ void startEmulation() {
 
 		handleUserInput(); //handles the user inputs, like key or mouse clicks
 
-		//if the drawScreen flag has been set then updates the screen (and clear the flag)
+		//if the drawScreen flag has been set then updates the emulator screen (and clear the flag)
 		if(draw_screen_flag) {
 				bufferGraphics(screen, pixel_buffer, renderer);
 				drawGraphics(pixel_buffer, renderer, texture);
 				draw_screen_flag = 0;
 		}
-
 	}
-
 }
 
 int main(int argc, char **argv) {
